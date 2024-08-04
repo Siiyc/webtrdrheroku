@@ -5,15 +5,17 @@ import asyncio
 import json
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.executors.pool import ThreadPoolExecutor
 
 app = Flask(__name__)
 
-TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
+TELEGRAM_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
 CHAT_IDS_FILE = 'chat_ids.json'
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
 scheduler = BackgroundScheduler()
+scheduler.add_executor(ThreadPoolExecutor(10))  # Использовать ThreadPoolExecutor для асинхронных задач
 scheduler.start()
 
 def load_chat_ids():
@@ -75,10 +77,10 @@ async def send_message_async(chat_id, message):
         async with session.post(url, data=data) as response:
             return await response.text()
 
-def update_chat_ids():
-    """Обновить список ID чатов."""
+async def async_update_chat_ids():
+    """Асинхронное обновление списка ID чатов."""
     try:
-        updates = bot.get_updates()  # Синхронный вызов
+        updates = await bot.get_updates()
         chat_ids = load_chat_ids()
         new_chat_ids = set()
         
@@ -94,6 +96,11 @@ def update_chat_ids():
             save_chat_ids(chat_ids)
     except Exception as e:
         print(f"Error updating chat IDs: {e}")
+
+def update_chat_ids():
+    """Функция-обертка для асинхронного обновления чатов."""
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(async_update_chat_ids())
 
 @app.route('/', methods=['POST'])
 def webhook():

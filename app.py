@@ -20,21 +20,41 @@ async def send_message_async(message):
             return await response.text()
 
 def format_message(data):
-    content = data.get('content', '')
+    # Извлечение данных из JSON
+    alert_id = data.get('name', 'N/A')
+    side = data.get('side', 'N/A').capitalize()
+    continuation = data.get('continuation', 'N/A')
+    base = data.get('base', 'N/A')
+    
+    # Обработка списка markets
+    markets = data.get('markets', [])
+    if markets:
+        market = markets[0]  # Предполагаем, что интересует первый элемент
+        exchange = market.get('exchange', 'N/A')
+        symbol = market.get('symbol', 'N/A')
+        price = market.get('price', 'N/A')
+    else:
+        exchange = 'N/A'
+        symbol = 'N/A'
+        price = 'N/A'
+
+    # Создание форматированного сообщения
     formatted_message = (
-        f"**Alert:** {data.get('alert_id', 'N/A')}\n"
-        f"**Side:** {data.get('side', 'N/A')} 🟢\n"
-        f"**Continuation:** {data.get('continuation', 'N/A')}\n\n"
-        f"*{data.get('pair', 'N/A')}* on *{data.get('exchange', 'N/A')}*\n"
-        f"**Price:** {data.get('price', 'N/A')}\n"
-        f"**Price Comparison:** {data.get('price_comparison', 'N/A')}\n"
+        f"**Alert ID:** {alert_id}\n"
+        f"**Side:** {side} 🟢\n"
+        f"**Continuation:** {continuation} minutes\n\n"
+        f"**Market Information:**\n"
+        f"   *Base:* {base}\n"
+        f"   *Symbol:* {symbol}\n"
+        f"   *Exchange:* {exchange}\n"
+        f"   *Price:* {price}\n\n"
+        f"{data.get('message', 'No additional message')}"
     )
     return formatted_message
 
 @app.route('/', methods=['POST'])
 def webhook():
     data = request.json
-    app.logger.info(f"Received webhook data: {data}")
     if not data:
         return jsonify({'error': 'No JSON data received'}), 400
 

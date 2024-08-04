@@ -8,7 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
-TELEGRAM_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
+TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
 CHAT_IDS_FILE = 'chat_ids.json'
 
 bot = Bot(token=TELEGRAM_TOKEN)
@@ -16,8 +16,8 @@ bot = Bot(token=TELEGRAM_TOKEN)
 scheduler = BackgroundScheduler()
 scheduler.start()
 
-# Функция для загрузки ID чатов из файла
 def load_chat_ids():
+    """Загрузить список ID чатов из файла."""
     try:
         if os.path.exists(CHAT_IDS_FILE) and os.path.getsize(CHAT_IDS_FILE) > 0:
             with open(CHAT_IDS_FILE, 'r') as f:
@@ -28,24 +28,16 @@ def load_chat_ids():
         print(f"Unexpected error while loading chat IDs: {e}")
     return []
 
-# Функция для сохранения ID чатов в файл
 def save_chat_ids(chat_ids):
+    """Сохранить список ID чатов в файл."""
     try:
         with open(CHAT_IDS_FILE, 'w') as f:
             json.dump(chat_ids, f)
     except Exception as e:
         print(f"Unexpected error while saving chat IDs: {e}")
 
-# Функция для отправки сообщений
-async def send_message_async(chat_id, message):
-    async with aiohttp.ClientSession() as session:
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        data = {'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'}
-        async with session.post(url, data=data) as response:
-            return await response.text()
-
-# Форматирование сообщения
 def format_message(data):
+    """Форматировать сообщение для отправки в чат."""
     alert_id = data.get('name', 'N/A')
     side = data.get('side', 'N/A').capitalize()
     continuation = data.get('continuation', 'N/A')
@@ -75,8 +67,37 @@ def format_message(data):
     )
     return formatted_message
 
+async def send_message_async(chat_id, message):
+    """Асинхронно отправить сообщение в чат."""
+    async with aiohttp.ClientSession() as session:
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        data = {'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'}
+        async with session.post(url, data=data) as response:
+            return await response.text()
+
+def update_chat_ids():
+    """Обновить список ID чатов."""
+    try:
+        updates = bot.get_updates()  # Синхронный вызов
+        chat_ids = load_chat_ids()
+        new_chat_ids = set()
+        
+        for update in updates:
+            if update.message and update.message.chat:
+                chat_id = update.message.chat_id
+                chat_type = update.message.chat.type
+                if chat_id not in chat_ids and chat_type in ['group', 'supergroup']:
+                    new_chat_ids.add(chat_id)
+                    chat_ids.append(chat_id)
+        
+        if new_chat_ids:
+            save_chat_ids(chat_ids)
+    except Exception as e:
+        print(f"Error updating chat IDs: {e}")
+
 @app.route('/', methods=['POST'])
 def webhook():
+    """Обработка входящих вебхуков и отправка сообщений в чаты."""
     data = request.json
     if not data:
         return jsonify({'error': 'No JSON data received'}), 400
@@ -96,23 +117,7 @@ def webhook():
 
     return jsonify({'status': 'success', 'results': results}), 200
 
-def update_chat_ids():
-    updates = bot.get_updates()
-    chat_ids = load_chat_ids()
-    new_chat_ids = set()
-    
-    for update in updates:
-        if update.message and update.message.chat:
-            chat_id = update.message.chat_id
-            chat_type = update.message.chat.type
-            if chat_id not in chat_ids and chat_type in ['group', 'supergroup']:
-                new_chat_ids.add(chat_id)
-                chat_ids.append(chat_id)
-    
-    if new_chat_ids:
-        save_chat_ids(chat_ids)
-
-# Запуск функции обновления чатов каждую минуту
+# Настроить обновление списка чатов каждую минуту
 scheduler.add_job(update_chat_ids, 'interval', minutes=1)
 
 if __name__ == '__main__':

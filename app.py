@@ -8,7 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
-TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
+TELEGRAM_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
 CHAT_IDS_FILE = 'chat_ids.json'
 
 bot = Bot(token=TELEGRAM_TOKEN)
@@ -18,15 +18,23 @@ scheduler.start()
 
 # Функция для загрузки ID чатов из файла
 def load_chat_ids():
-    if os.path.exists(CHAT_IDS_FILE):
-        with open(CHAT_IDS_FILE, 'r') as f:
-            return json.load(f)
+    try:
+        if os.path.exists(CHAT_IDS_FILE) and os.path.getsize(CHAT_IDS_FILE) > 0:
+            with open(CHAT_IDS_FILE, 'r') as f:
+                return json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON from {CHAT_IDS_FILE}: {e}")
+    except Exception as e:
+        print(f"Unexpected error while loading chat IDs: {e}")
     return []
 
 # Функция для сохранения ID чатов в файл
 def save_chat_ids(chat_ids):
-    with open(CHAT_IDS_FILE, 'w') as f:
-        json.dump(chat_ids, f)
+    try:
+        with open(CHAT_IDS_FILE, 'w') as f:
+            json.dump(chat_ids, f)
+    except Exception as e:
+        print(f"Unexpected error while saving chat IDs: {e}")
 
 # Функция для отправки сообщений
 async def send_message_async(chat_id, message):
@@ -56,7 +64,7 @@ def format_message(data):
 
     formatted_message = (
         f"**Alert ID:** {alert_id}\n"
-        f"**Side:** {side}\n"
+        f"**Side:** {side} 🟢\n"
         f"**Continuation:** {continuation} minutes\n\n"
         f"**Market Information:**\n"
         f"   *Base:* {base}\n"

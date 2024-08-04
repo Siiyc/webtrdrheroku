@@ -9,7 +9,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 
 app = Flask(__name__)
 
-TELEGRAM_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
+TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
 CHAT_IDS_FILE = 'chat_ids.json'
 
 bot = Bot(token=TELEGRAM_TOKEN)

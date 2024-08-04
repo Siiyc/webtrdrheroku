@@ -99,8 +99,7 @@ async def async_update_chat_ids():
 
 def update_chat_ids():
     """Функция-обертка для асинхронного обновления чатов."""
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(async_update_chat_ids())
+    asyncio.run(async_update_chat_ids())
 
 @app.route('/', methods=['POST'])
 def webhook():
@@ -111,17 +110,12 @@ def webhook():
 
     message = format_message(data)
     
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    chat_ids = load_chat_ids()
     results = []
+    chat_ids = load_chat_ids()
     for chat_id in chat_ids:
-        result = loop.run_until_complete(send_message_async(chat_id, message))
+        result = asyncio.run(send_message_async(chat_id, message))
         results.append(result)
     
-    loop.close()
-
     return jsonify({'status': 'success', 'results': results}), 200
 
 # Настроить обновление списка чатов каждую минуту

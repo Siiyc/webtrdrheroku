@@ -1,57 +1,35 @@
 from flask import Flask, request, jsonify
-from aiogram import Bot, Dispatcher, types, executor
+from telegram import Bot
+import aiohttp
 import asyncio
 import json
-import os
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.executors.pool import ThreadPoolExecutor
-import logging
 
 app = Flask(__name__)
 
-# Настройки
+# Ваш токен Telegram-бота и ID чата
 TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
-CHAT_IDS_FILE = 'chat_ids.json'
+CHAT_ID = '427720816'
 
-# Настройки бота
 bot = Bot(token=TELEGRAM_TOKEN)
-dp = Dispatcher(bot)
 
-# Настройки логирования
-logging.basicConfig(level=logging.INFO)
-
-# Настройки планировщика
-scheduler = BackgroundScheduler()
-scheduler.add_executor(ThreadPoolExecutor(10))
-scheduler.start()
-
-def load_chat_ids():
-    try:
-        if os.path.exists(CHAT_IDS_FILE) and os.path.getsize(CHAT_IDS_FILE) > 0:
-            with open(CHAT_IDS_FILE, 'r') as f:
-                return json.load(f)
-    except json.JSONDecodeError as e:
-        logging.error(f"Error decoding JSON from {CHAT_IDS_FILE}: {e}")
-    except Exception as e:
-        logging.error(f"Unexpected error while loading chat IDs: {e}")
-    return []
-
-def save_chat_ids(chat_ids):
-    try:
-        with open(CHAT_IDS_FILE, 'w') as f:
-            json.dump(chat_ids, f)
-    except Exception as e:
-        logging.error(f"Unexpected error while saving chat IDs: {e}")
+async def send_message_async(message):
+    async with aiohttp.ClientSession() as session:
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        data = {'chat_id': CHAT_ID, 'text': message, 'parse_mode': 'Markdown'}
+        async with session.post(url, data=data) as response:
+            return await response.text()
 
 def format_message(data):
+    # Извлечение данных из JSON
     alert_id = data.get('name', 'N/A')
     side = data.get('side', 'N/A').capitalize()
     continuation = data.get('continuation', 'N/A')
     base = data.get('base', 'N/A')
     
+    # Обработка списка markets
     markets = data.get('markets', [])
     if markets:
-        market = markets[0]
+        market = markets[0]  # Предполагаем, что интересует первый элемент
         exchange = market.get('exchange', 'N/A')
         symbol = market.get('symbol', 'N/A')
         price = market.get('price', 'N/A')
@@ -60,6 +38,7 @@ def format_message(data):
         symbol = 'N/A'
         price = 'N/A'
 
+    # Создание форматированного сообщения
     formatted_message = (
         f"**Alert ID:** {alert_id}\n"
         f"**Side:** {side} 🟢\n"
@@ -73,52 +52,22 @@ def format_message(data):
     )
     return formatted_message
 
-async def send_message(chat_id, message):
-    try:
-        await bot.send_message(chat_id, message, parse_mode=types.ParseMode.MARKDOWN)
-    except Exception as e:
-        logging.error(f"Error sending message to chat {chat_id}: {e}")
-
-async def async_update_chat_ids():
-    try:
-        updates = await bot.get_updates()
-        chat_ids = load_chat_ids()
-        new_chat_ids = set()
-        
-        for update in updates:
-            if update.message and update.message.chat:
-                chat_id = update.message.chat.id
-                chat_type = update.message.chat.type
-                if chat_id not in chat_ids and chat_type in ['group', 'supergroup']:
-                    new_chat_ids.add(chat_id)
-                    chat_ids.append(chat_id)
-        
-        if new_chat_ids:
-            save_chat_ids(chat_ids)
-    except Exception as e:
-        logging.error(f"Error updating chat IDs: {e}")
-
-def update_chat_ids():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(async_update_chat_ids())
-
 @app.route('/', methods=['POST'])
-async def webhook():
-    data = await request.json
+def webhook():
+    data = request.json
     if not data:
         return jsonify({'error': 'No JSON data received'}), 400
 
+    # Форматируем сообщение
     message = format_message(data)
-    chat_ids = load_chat_ids()
-
-    for chat_id in chat_ids:
-        await send_message(chat_id, message)
     
+    # Запускаем асинхронную функцию в синхронном контексте
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    result = loop.run_until_complete(send_message_async(message))
+    loop.close()
+
     return jsonify({'status': 'success'}), 200
 
-# Настроить обновление списка чатов каждую минуту
-scheduler.add_job(update_chat_ids, 'interval', minutes=1)
-
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    app.run(debug=True)

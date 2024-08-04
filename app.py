@@ -9,7 +9,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 
 app = Flask(__name__)
 
-TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
+TELEGRAM_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
 CHAT_IDS_FILE = 'chat_ids.json'
 
 bot = Bot(token=TELEGRAM_TOKEN)
@@ -58,7 +58,7 @@ def format_message(data):
 
     formatted_message = (
         f"**Alert ID:** {alert_id}\n"
-        f"**Side:** {side} 🟢\n"
+        f"**Side:** {side} \n"
         f"**Continuation:** {continuation} minutes\n\n"
         f"**Market Information:**\n"
         f"   *Base:* {base}\n"
@@ -110,11 +110,17 @@ def webhook():
 
     message = format_message(data)
     
-    results = []
-    chat_ids = load_chat_ids()
-    for chat_id in chat_ids:
-        result = asyncio.run(send_message_async(chat_id, message))
-        results.append(result)
+    async def send_messages():
+        results = []
+        chat_ids = load_chat_ids()
+        for chat_id in chat_ids:
+            result = await send_message_async(chat_id, message)
+            results.append(result)
+        return results
+    
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    results = loop.run_until_complete(send_messages())
     
     return jsonify({'status': 'success', 'results': results}), 200
 

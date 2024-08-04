@@ -14,7 +14,7 @@ def webhook():
     data = request.json
     if not data:
         return jsonify({'error': 'No JSON data received'}), 400
-
+    bot.send_message(chat_id=CHAT_ID, text="Test message")
     # Обработка данных
     message = f"Received webhook data: {data}"
     bot.send_message(chat_id=CHAT_ID, text=message)

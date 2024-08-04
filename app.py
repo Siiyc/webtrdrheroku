@@ -41,7 +41,7 @@ def format_message(data):
     # Создание форматированного сообщения
     formatted_message = (
         f"**Alert ID:** {alert_id}\n"
-        f"**Side:** {side} 🟢\n"
+        f"**Side:** {side}\n"
         f"**Continuation:** {continuation} minutes\n\n"
         f"**Market Information:**\n"
         f"   *Base:* {base}\n"

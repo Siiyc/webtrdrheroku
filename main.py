@@ -1,12 +1,14 @@
 from flask import Flask, request, jsonify
 import os
+import logging
 app = Flask(__name__)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     if request.method == 'POST':
         data = request.json
-        # Обработка полученных данных
+        # Обработка полученных данныхgit
+        logger.info('Received webhook data: %s', data)
         print(data)  # Вывод данных в консоль
         return jsonify({'status': 'success'}), 200
 

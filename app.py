@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # Ваш токен Telegram-бота и ID чата
 TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
-CHAT_ID = '427720816'
+CHAT_ID = '-4269958834'
 
 bot = Bot(token=TELEGRAM_TOKEN)
 

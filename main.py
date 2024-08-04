@@ -1,21 +1,25 @@
 from flask import Flask, request, jsonify
-import logging
-import os
+from telegram import Bot
+
 app = Flask(__name__)
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Ваш токен Telegram-бота и ID чата
+TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
+CHAT_ID = '427720816'
+
+bot = Bot(token=TELEGRAM_TOKEN)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    if request.method == 'POST':
-        data = request.json
-        if data:
-            logger.info('Received webhook data: %s', data)
-        else:
-            logger.warning('No JSON data received or JSON data is invalid.')
-        return jsonify({'status': 'success'}), 200
+    data = request.json
+    if not data:
+        return jsonify({'error': 'No JSON data received'}), 400
+
+    # Обработка данных
+    message = f"Received webhook data: {data}"
+    bot.send_message(chat_id=CHAT_ID, text=message)
+
+    return jsonify({'status': 'success'}), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    app.run(debug=True)

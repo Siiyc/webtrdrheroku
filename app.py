@@ -5,8 +5,8 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 app = Flask(__name__)
 
 # Ваш токен Telegram-бота и ID чата
-TELEGRAM_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
-CHAT_ID = 'YOUR_CHAT_ID'
+TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
+CHAT_ID = '427720816'
 
 bot = Bot(token=TELEGRAM_TOKEN)
 

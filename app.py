@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
-from aiogram import Bot, Dispatcher, types
-from aiogram.utils import executor
+from aiogram import Bot, Dispatcher, types, executor
 import asyncio
 import json
 import os

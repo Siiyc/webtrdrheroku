@@ -9,7 +9,7 @@ CHAT_ID = '427720816'
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
-@app.route('/webhook', methods=['POST'])
+@app.route('/', methods=['POST'])
 def webhook():
     data = request.json
     if not data:

@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify
 import os
 import logging
 app = Flask(__name__)
-
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 @app.route('/webhook', methods=['POST'])
 def webhook():
     if request.method == 'POST':

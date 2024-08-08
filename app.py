@@ -14,14 +14,15 @@ CHAT_ID = '427720816'
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
-async def send_message_async(message, json_file_path):
+async def send_message_async(message, json_file_path = None):
     async with aiohttp.ClientSession() as session:
         # Отправка текстового сообщения
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
         data = {'chat_id': CHAT_ID, 'text': message, 'parse_mode': 'Markdown'}
         async with session.post(url, data=data) as response:
             await response.text()
-
+        if json_file_path == None:
+            return await response.text()
         # Отправка JSON-файла
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendDocument"
         form = aiohttp.FormData()
@@ -71,7 +72,7 @@ def webhook():
         # Запускаем асинхронную функцию в синхронном контексте
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(send_message_async(message, temp_json_file_path))
+        result = loop.run_until_complete(send_message_async(message))
     finally:
         # Удаляем временный файл
         print()

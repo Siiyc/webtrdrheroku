@@ -67,18 +67,17 @@ def format_message(data):
 
 @app.route('/', methods=['POST'])
 def webhook():
-    message = 'huy'
-    try:
-        # Запускаем асинхронную функцию в синхронном контексте
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(send_message_async(message))
-    finally:
-        # Удаляем временный файл
-        print()
     data = request.json
-    if not data:
-        return jsonify({'error': 'No JSON data received'}), 400
+    if data == None:
+        message = 'nihuya'
+        try:
+            # Запускаем асинхронную функцию в синхронном контексте
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            result = loop.run_until_complete(send_message_async(message))
+        finally:
+            # Удаляем временный файл
+            print()
 
     # Форматируем сообщение
     #message = format_message(data)

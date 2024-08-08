@@ -14,7 +14,7 @@ CHAT_ID = '427720816'
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
-async def send_message_async(message, json_file_path = None):
+async def send_message_async(message, json_file_path):
     async with aiohttp.ClientSession() as session:
         # Отправка текстового сообщения
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -80,8 +80,8 @@ def webhook():
             print()
 
     # Форматируем сообщение
-    message = format_message(data)
-    #message = 'huy'
+    #message = format_message(data)
+    message = 'huy'
     # Сохраняем JSON во временный файл
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode='w') as temp_json_file:
         json.dump(data, temp_json_file, indent=4)

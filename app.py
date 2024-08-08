@@ -1,47 +1,38 @@
+import logging
 from flask import Flask, request, jsonify
 from telegram import Bot
 import aiohttp
 import asyncio
 import json
-import os
-import tempfile
 
 app = Flask(__name__)
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
 
 # Ваш токен Telegram-бота и ID чата
 TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
 CHAT_ID = '427720816'
-###ffff
+
 bot = Bot(token=TELEGRAM_TOKEN)
 
-async def send_message_async(message, json_file_path):
+async def send_message_async(message, file_path=None):
     async with aiohttp.ClientSession() as session:
-        # Отправка текстового сообщения
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        data = {'chat_id': CHAT_ID, 'text': message, 'parse_mode': 'Markdown'}
-        async with session.post(url, data=data) as response:
-            await response.text()
-
-        # Отправка JSON-файла
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendDocument"
-        form = aiohttp.FormData()
-        form.add_field('chat_id', CHAT_ID)
-        form.add_field('document', open(json_file_path, 'rb'), filename=os.path.basename(json_file_path), content_type='application/json')
-        
-        async with session.post(url, data=form) as response:
+        data = {'chat_id': CHAT_ID, 'caption': message, 'parse_mode': 'Markdown'}
+        files = {'document': open(file_path, 'rb')} if file_path else None
+        async with session.post(url, data=data, files=files) as response:
             return await response.text()
 
 def format_message(data):
-    # Извлечение данных из JSON
     alert_id = data.get('name', 'N/A')
     side = data.get('side', 'N/A').capitalize()
     continuation = data.get('continuation', 'N/A')
     base = data.get('base', 'N/A')
-    
-    # Обработка списка markets
+
     markets = data.get('markets', [])
     if markets:
-        market = markets[0]  # Предполагаем, что интересует первый элемент
+        market = markets[0]
         exchange = market.get('exchange', 'N/A')
         symbol = market.get('symbol', 'N/A')
         price = market.get('price', 'N/A')
@@ -50,7 +41,8 @@ def format_message(data):
         symbol = 'N/A'
         price = 'N/A'
 
-    # Создание форматированного сообщения
+    custom_message = data.get('message', 'No additional message')
+
     formatted_message = (
         f"**Alert ID:** {alert_id}\n"
         f"**Side:** {side}\n"
@@ -60,33 +52,30 @@ def format_message(data):
         f"   *Symbol:* {symbol}\n"
         f"   *Exchange:* {exchange}\n"
         f"   *Price:* {price}\n\n"
-        f"{data.get('message', 'No additional message')}"
+        f"**Custom Message:** {custom_message}"
     )
     return formatted_message
 
 @app.route('/', methods=['POST'])
 def webhook():
     data = request.json
-    print(data)  # Добавьте этот принт для отладки
     if not data:
         return jsonify({'error': 'No JSON data received'}), 400
 
-    # Форматируем сообщение
+    # Логируем полученные данные
+    logging.info(f"Received JSON data: {json.dumps(data, indent=4)}")
+
     message = format_message(data)
+    
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    # Запись данных во временный файл
+    with open('received_data.json', 'w') as json_file:
+        json.dump(data, json_file, indent=4)
 
-    # Сохраняем JSON во временный файл
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode='w') as temp_json_file:
-        json.dump(data, temp_json_file, indent=4)
-        temp_json_file_path = temp_json_file.name
-
-    try:
-        # Запускаем асинхронную функцию в синхронном контексте
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(send_message_async(message, temp_json_file_path))
-    finally:
-        # Удаляем временный файл
-        os.remove(temp_json_file_path)
+    result = loop.run_until_complete(send_message_async(message, 'received_data.json'))
+    loop.close()
 
     return jsonify({'status': 'success'}), 200
 

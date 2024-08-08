@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from telegram import Bot, InputFile
+from telegram import Bot
 import aiohttp
 import asyncio
 import json
@@ -24,11 +24,12 @@ async def send_message_async(message, json_file_path):
 
         # Отправка JSON-файла
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendDocument"
-        with open(json_file_path, 'rb') as file:
-            files = {'document': file}
-            data = {'chat_id': CHAT_ID}
-            async with session.post(url, data=data, files=files) as response:
-                return await response.text()
+        form = aiohttp.FormData()
+        form.add_field('chat_id', CHAT_ID)
+        form.add_field('document', open(json_file_path, 'rb'), filename=os.path.basename(json_file_path), content_type='application/json')
+        
+        async with session.post(url, data=form) as response:
+            return await response.text()
 
 def format_message(data):
     # Извлечение данных из JSON

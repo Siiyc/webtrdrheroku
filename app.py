@@ -67,6 +67,7 @@ def format_message(data):
 @app.route('/', methods=['POST'])
 def webhook():
     data = request.json
+    print(data)  # Добавьте этот принт для отладки
     if not data:
         return jsonify({'error': 'No JSON data received'}), 400
 

@@ -22,7 +22,7 @@ async def send_message_async(message, json_file_path = None):
         async with session.post(url, data=data) as response:
             await response.text()
         if json_file_path == None:
-            return await response.text()
+            return
         # Отправка JSON-файла
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendDocument"
         form = aiohttp.FormData()

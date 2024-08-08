@@ -63,18 +63,17 @@ def webhook():
         return jsonify({'error': 'No JSON data received'}), 400
 
     # Логируем полученные данные
-    logging.info(f"Received JSON data: {json.dumps(data, indent=4)}")
 
-    message = format_message(data)
-    
+    #message = format_message(data)
+    message  = 'huy'
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     
     # Запись данных во временный файл
-    with open('received_data.json', 'w') as json_file:
-        json.dump(data, json_file, indent=4)
+    #with open('received_data.json', 'w') as json_file:
+    #    json.dump(data, json_file, indent=4)
 
-    result = loop.run_until_complete(send_message_async(message, 'received_data.json'))
+    result = loop.run_until_complete(send_message_async(message, 'request.json'))
     loop.close()
 
     return jsonify({'status': 'success'}), 200

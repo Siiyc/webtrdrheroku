@@ -70,10 +70,10 @@ def webhook():
     asyncio.set_event_loop(loop)
     
     # Запись данных во временный файл
-    #with open('received_data.json', 'w') as json_file:
-    #    json.dump(data, json_file, indent=4)
+    with open('received_data.json', 'w') as json_file:
+        json.dump(data, json_file, indent=4)
 
-    result = loop.run_until_complete(send_message_async(message, 'request.json'))
+    result = loop.run_until_complete(send_message_async(message, 'received_data.json'))
     loop.close()
 
     return jsonify({'status': 'success'}), 200

@@ -80,7 +80,7 @@ def webhook():
             print()
 
     # Форматируем сообщение
-    #message = format_message(data)
+    message = format_message(data)
     #message = 'huy'
     # Сохраняем JSON во временный файл
     with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode='w') as temp_json_file:

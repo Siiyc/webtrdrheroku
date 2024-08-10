@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # Ваш токен Telegram-бота и ID чата
 TELEGRAM_TOKEN = '7179465730:AAEFcAad5AG0HWGTlCJ0e3fv0G6ZL-cQ3AA'
-CHAT_ID = '-4269958834'
+CHAT_ID = '427720816'
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
@@ -21,7 +21,7 @@ async def send_message_async(message):
 
 def format_message(data):
     # Извлечение данных из JSON
-    content = data.get('name', 'N/A')
+    content = data.get('content', 'N/A')
     
     
     # Обработка списка markets

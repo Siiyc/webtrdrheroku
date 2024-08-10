@@ -28,7 +28,7 @@ def format_message(data):
     
     # Создание форматированного сообщения
     formatted_message = (
-        f"**Info:** {content}\n"
+        f"{content}\n"
         
     )
     return formatted_message
